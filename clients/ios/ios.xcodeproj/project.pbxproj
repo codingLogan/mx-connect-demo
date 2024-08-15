@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D85B224C2C6E95AC0086FE73 /* WKWebViewExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85B224B2C6E95AC0086FE73 /* WKWebViewExample.swift */; };
 		D8DE72552C6D327700239875 /* iosApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DE72542C6D327700239875 /* iosApp.swift */; };
 		D8DE72572C6D327700239875 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DE72562C6D327700239875 /* ContentView.swift */; };
 		D8DE72592C6D327A00239875 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D8DE72582C6D327A00239875 /* Assets.xcassets */; };
@@ -36,6 +37,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		D85B224B2C6E95AC0086FE73 /* WKWebViewExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WKWebViewExample.swift; sourceTree = "<group>"; };
 		D8DE72512C6D327700239875 /* ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ios.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8DE72542C6D327700239875 /* iosApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iosApp.swift; sourceTree = "<group>"; };
 		D8DE72562C6D327700239875 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -102,6 +104,7 @@
 				D8DE72562C6D327700239875 /* ContentView.swift */,
 				D8DE727E2C6D50B700239875 /* WidgetView.swift */,
 				D8DE72802C6D536B00239875 /* WidgetEventsView.swift */,
+				D85B224B2C6E95AC0086FE73 /* WKWebViewExample.swift */,
 				D8DE72582C6D327A00239875 /* Assets.xcassets */,
 				D8DE725A2C6D327A00239875 /* Preview Content */,
 			);
@@ -263,6 +266,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D85B224C2C6E95AC0086FE73 /* WKWebViewExample.swift in Sources */,
 				D8DE727F2C6D50B700239875 /* WidgetView.swift in Sources */,
 				D8DE72812C6D536B00239875 /* WidgetEventsView.swift in Sources */,
 				D8DE72572C6D327700239875 /* ContentView.swift in Sources */,

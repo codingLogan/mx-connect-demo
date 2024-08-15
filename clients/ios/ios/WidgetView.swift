@@ -13,7 +13,7 @@ struct WidgetView: View {
     @State var widgetUrl = ""
     
     func getWidgetUrl() async {
-        let url = URL(string: "http://localhost:3000/api/web_url")!
+        let url = URL(string: "http://localhost:3000/api/mobile_url")!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         
@@ -29,23 +29,20 @@ struct WidgetView: View {
     
     var body: some View {
         VStack {
-            Text("Welcome to the MX Connect demo app")
-            Button("Click to launch Connect in a webview") {
-                Task {
-                    await getWidgetUrl()
+            if (showMXConnect && widgetUrl != "") {
+//                SafariSheetView(url:URL(string: widgetUrl)!)
+                Button("Close Connect") {
+                    showMXConnect = false
                 }
-            }
-            .padding()
-            .sheet(isPresented: $showMXConnect) {
-                if (widgetUrl != "") {
-                    SafariSheetView(url:URL(string: widgetUrl)!)
-                } else {
-                    Text("Something went wrong with the Connect URL")
+                WKWebViewExample(url:URL(string: widgetUrl)!)
+            } else {
+                Text("Welcome to the MX Connect demo app")
+                Button("Click to launch Connect in a webview") {
+                    Task {
+                        await getWidgetUrl()
+                    }
                 }
-            }
-            
-            if (widgetUrl != "") {
-                Text("Launched widget!")
+                .padding()
             }
         }
     }
@@ -62,7 +59,6 @@ struct SafariSheetView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: SFSafariViewController, context: UIViewControllerRepresentableContext<SafariSheetView>) {
         
     }
-
 }
 
 struct WidgetUrl: Codable {
