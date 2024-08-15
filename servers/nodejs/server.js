@@ -111,3 +111,26 @@ app.get("/api/web_url", (req, res) => {
       }
     );
 });
+
+// Endpoint - Returns a basic mx Connect Widget Url.
+app.get("/api/mobile_url", (req, res) => {
+  api
+    .post(`/users/${demoUser.guid}/widget_urls`, {
+      widget_url: {
+        ui_message_version: 4,
+        widget_type: "connect_widget",
+        is_mobile_webview: true,
+        ui_message_webview_url_scheme: "mxconnectdemo",
+      },
+    })
+    .then(
+      (urlResponse) => {
+        res.json(urlResponse);
+      },
+      (urlError) => {
+        console.error(urlError);
+        res.statusCode(500);
+        res.json("Something went wrong getting a widget URL");
+      }
+    );
+});
