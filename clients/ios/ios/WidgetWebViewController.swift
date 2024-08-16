@@ -142,4 +142,15 @@ class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDele
 
         return nil
     }
+    
+    // TODO: This causes an error in the console....
+    /**
+     Don't include this code in your app, this is just to get around ssl issues in development.
+     */
+    func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        guard let serverTrust = challenge.protectionSpace.serverTrust else { return completionHandler(.useCredential, nil) }
+        let exceptions = SecTrustCopyExceptions(serverTrust)
+        SecTrustSetExceptions(serverTrust, exceptions)
+        completionHandler(.useCredential, URLCredential(trust: serverTrust))
+    }
 }

@@ -27,6 +27,12 @@ struct ContentView: View {
                 Image(systemName: "smartphone")
                 Text("Connect Widget")
             }.environmentObject(widgetEvents)
+                // onOpenUrl handles listening for URL Types that are registered in this app
+                // This is how you "return" to your own app after an OAuth experience
+                .onOpenURL(perform: { url in
+                    print("handling url")
+                    print(url)
+                })
             
             WidgetEventsView().tabItem {
                 Image(systemName: "ellipsis.curlybraces")

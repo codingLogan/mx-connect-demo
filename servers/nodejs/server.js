@@ -121,6 +121,7 @@ app.get("/api/mobile_url", (req, res) => {
         widget_type: "connect_widget",
         is_mobile_webview: true,
         ui_message_webview_url_scheme: "mxconnectdemo",
+        client_redirect_url: "mxconnectdemo://oauthcomplete", // Change this value to what your app understands
       },
     })
     .then(
