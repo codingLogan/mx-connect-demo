@@ -142,8 +142,7 @@ class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDele
 
         return nil
     }
-    
-    // TODO: This causes an error in the console....
+
     /**
      Don't include this code in your app, this is just to get around ssl issues in development.
      */
@@ -152,5 +151,6 @@ class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDele
         let exceptions = SecTrustCopyExceptions(serverTrust)
         SecTrustSetExceptions(serverTrust, exceptions)
         completionHandler(.useCredential, URLCredential(trust: serverTrust))
+        print("TODO: fix this WKWebView 'func webView' handler... bad for peformance and it may lead to UI unresponsiveness???")
     }
 }
