@@ -12,6 +12,7 @@ import WebKit
 class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDelegate {
     var widgetWebView: WKWebView!
     var widgetUrl: String = ""
+    var widgetEvents: WidgetEvents!
     
     /**
      Set up a WKWebView with configurations to intercept navigation requests.
@@ -85,6 +86,11 @@ class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDele
             print("Widget Event: \(path)")
             print("data: \(metaDataQueryItem?.value ?? "")")
             print("-----------------------------------")
+            
+            // An initial post message is received that is not part of the connect events, this ignores it.
+            if (path != "") {
+                widgetEvents.events.append(WidgetEvent(name: path, data: metaDataQueryItem?.value ?? ""))
+            }
             
             if path == "/oauthRequested" {
                 handleOauthRedirect(payload: metaDataQueryItem)

@@ -10,11 +10,14 @@ import SwiftUI
 struct WidgetWebView: UIViewControllerRepresentable {
     typealias UIViewControllerType = WidgetWebViewController
     
+    @EnvironmentObject var widgetEvents: WidgetEvents
+    
     var url: String = ""
     
     func makeUIViewController(context: Context) -> WidgetWebViewController {
         let widgetViewController = WidgetWebViewController()
         widgetViewController.widgetUrl = url
+        widgetViewController.widgetEvents = widgetEvents
         
         return widgetViewController
     }

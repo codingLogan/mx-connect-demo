@@ -7,18 +7,31 @@
 
 import SwiftUI
 
+struct WidgetEvent: Identifiable {
+    var id = UUID()
+    var name : String
+    var data : String?
+}
+
+final class WidgetEvents: ObservableObject {
+    @Published var events: [WidgetEvent] = []
+}
+
 struct ContentView: View {
+    
+    @StateObject var widgetEvents = WidgetEvents()
+    
     var body: some View {
         TabView {
             WidgetView().tabItem {
                 Image(systemName: "smartphone")
                 Text("Connect Widget")
-            }
+            }.environmentObject(widgetEvents)
             
             WidgetEventsView().tabItem {
                 Image(systemName: "ellipsis.curlybraces")
                 Text("Widget Events")
-            }
+            }.environmentObject(widgetEvents).badge(widgetEvents.events.count)
         }
         .padding()
     }
