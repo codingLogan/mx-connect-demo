@@ -10,6 +10,7 @@ import SafariServices
 
 struct WidgetView: View {
     @State var showMXConnect = false
+    @State var showLoader = false
     @State var widgetUrl = ""
     
     func getWidgetUrl() async {
@@ -21,6 +22,7 @@ struct WidgetView: View {
             let (data, _) = try await URLSession.shared.data(from: url)
             let decodedWidgetUrlResponse = try JSONDecoder().decode(WidgetUrlResponse.self, from: data)
             widgetUrl = decodedWidgetUrlResponse.widget_url.url
+            showLoader = false
             showMXConnect = true
         } catch {
             print("Could not get widget URL: \(error.localizedDescription)")
@@ -29,35 +31,24 @@ struct WidgetView: View {
     
     var body: some View {
         VStack {
-            if (showMXConnect && widgetUrl != "") {
-//                SafariSheetView(url:URL(string: widgetUrl)!)
+            if (showLoader) {
+                ProgressView()
+            } else if (showMXConnect && widgetUrl != "") {
                 Button("Close Connect") {
                     showMXConnect = false
                 }
-                WKWebViewExample(url:URL(string: widgetUrl)!)
+                WidgetWebView(url:widgetUrl)
             } else {
                 Text("Welcome to the MX Connect demo app")
                 Button("Click to launch Connect in a webview") {
                     Task {
+                        showLoader = true
                         await getWidgetUrl()
                     }
                 }
                 .padding()
             }
         }
-    }
-}
-
-struct SafariSheetView: UIViewControllerRepresentable {
-
-    let url: URL
-
-    func makeUIViewController(context: UIViewControllerRepresentableContext<SafariSheetView>) -> SFSafariViewController {
-        return SFSafariViewController(url: url)
-    }
-
-    func updateUIViewController(_ uiViewController: SFSafariViewController, context: UIViewControllerRepresentableContext<SafariSheetView>) {
-        
     }
 }
 
