@@ -28,6 +28,7 @@ class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDele
         widgetWebView = WKWebView(frame: .zero, configuration: webConfiguration)
         widgetWebView.navigationDelegate = self // For WKNavigationDelegate
         widgetWebView.uiDelegate = self
+        widgetWebView.isInspectable = true // Allows a local Safari Browser's "Develop" menu to see the web console of the WKWebView
         view = widgetWebView
     }
 
@@ -66,6 +67,7 @@ class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDele
                  decidePolicyFor navigationAction: WKNavigationAction,
                  decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         
+        print("===================================")
         print("Capture WKNavigationAction")
         
         let appScheme = "mxconnectdemo://"
@@ -74,18 +76,11 @@ class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDele
         print("\(navigationUrl ?? "navigation url"))")
         let isPostMessageFromMX = navigationUrl?.hasPrefix(appScheme)
         
-        print(navigationUrl!)
-        
         if (isPostMessageFromMX!) {
             let urlc = URLComponents(string: navigationUrl ?? "")
             let path = urlc?.path ?? ""
             // there is only one query param ("metadata") with each navigationUrl, so just grab the first
             let metaDataQueryItem = urlc?.queryItems?.first
-            
-            print("===================================")
-            print("Widget Event: \(path)")
-            print("data: \(metaDataQueryItem?.value ?? "")")
-            print("-----------------------------------")
             
             // An initial post message is received that is not part of the connect events, this ignores it.
             if (path != "") {
@@ -102,15 +97,15 @@ class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDele
             decisionHandler(.cancel)
             return
         }
-        print("Is not a post message")
         
         // Make sure to open links in the user agent, not the webview.
         // Allowing a navigation action could navigate the user away from
         // connect and lose their session.
         if let urlToOpen = navigationUrl {
             // Don't open the navigationUrl, if it is the widget url itself on the first load
-            let shouldOpenUrlInBrowser = urlToOpen != widgetUrl
-            if (shouldOpenUrlInBrowser) {
+            let isWebviewsFirstURL = urlToOpen == widgetUrl
+            let isConnectOrConnections = urlToOpen.contains("/connect")
+            if (!isWebviewsFirstURL && !isConnectOrConnections) {
                 print("Opening Url in the browser")
                 UIApplication.shared.open(URL(string: urlToOpen)!)
             }
