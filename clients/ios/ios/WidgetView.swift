@@ -18,6 +18,18 @@ struct WidgetView: View {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         
+        await makeWidgetUrlRequest(url: url)
+    }
+
+    func getMasterWidgetUrl() async {
+        let url = URL(string: "http://localhost:3000/api/master_mobile_url")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        
+        await makeWidgetUrlRequest(url: url)
+    }
+
+    func makeWidgetUrlRequest(url: URL) async {
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             let decodedWidgetUrlResponse = try JSONDecoder().decode(WidgetUrlResponse.self, from: data)
@@ -39,11 +51,20 @@ struct WidgetView: View {
                 }
                 WidgetWebView(url:widgetUrl)
             } else {
-                Text("Welcome to the MX Connect demo app")
+                Text("Welcome to the MX Connect demo app").padding()
+                
                 Button("Click to launch Connect in a webview") {
                     Task {
                         showLoader = true
                         await getWidgetUrl()
+                    }
+                }
+                .padding()
+                
+                Button("Click to launch Master in a webview") {
+                    Task {
+                        showLoader = true
+                        await getMasterWidgetUrl()
                     }
                 }
                 .padding()

@@ -134,4 +134,28 @@ app.get("/api/mobile_url", (req, res) => {
         res.json("Something went wrong getting a widget URL");
       }
     );
+
+  // Endpoint - Returns a basic mx Master Widget Url.
+  app.get("/api/master_mobile_url", (req, res) => {
+    api
+      .post(`/users/${demoUser.guid}/widget_urls`, {
+        widget_url: {
+          ui_message_version: 4,
+          widget_type: "master_widget",
+          is_mobile_webview: true,
+          ui_message_webview_url_scheme: "mxconnectdemo",
+          client_redirect_url: "mxconnectdemo://oauthcomplete", // Change this value to what your app understands
+        },
+      })
+      .then(
+        (urlResponse) => {
+          res.json(urlResponse);
+        },
+        (urlError) => {
+          console.error(urlError);
+          res.statusCode(500);
+          res.json("Something went wrong getting a widget URL");
+        }
+      );
+  });
 });

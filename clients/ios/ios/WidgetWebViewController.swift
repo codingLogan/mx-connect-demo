@@ -81,11 +81,8 @@ class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDele
             let path = urlc?.path ?? ""
             // there is only one query param ("metadata") with each navigationUrl, so just grab the first
             let metaDataQueryItem = urlc?.queryItems?.first
-            
-            // An initial post message is received that is not part of the connect events, this ignores it.
-            if (path != "") {
-                widgetEvents.events.append(WidgetEvent(name: path, data: metaDataQueryItem?.value ?? ""))
-            }
+
+            widgetEvents.events.append(WidgetEvent(name: (urlc?.host ?? "") + path, data: metaDataQueryItem?.value ?? ""))
             
             if path == "/oauthRequested" {
                 handleOauthRedirect(payload: metaDataQueryItem)
