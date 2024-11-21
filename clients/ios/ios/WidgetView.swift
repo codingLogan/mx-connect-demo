@@ -41,6 +41,12 @@ struct WidgetView: View {
         }
     }
     
+    func mobileMasterWidgetUrl() {
+        widgetUrl = "https://int-widgets.moneydesktop.com/md/mobile_master/NmNhYjAwNjQyNjBlZmQ4YjMxNjRkNTgwMjg3ZWExNzk2OGYwMWYyNzY3YTVjNmVlY2JmMWU3MWRlM2Q0MmJhYzcxMWM5ZjI4NGE3ZmYxOWUwN2VhMjMxMGJjMGZjMzNlOGUxMjZlY2VjYzAyOTgxZmNkM2NmYTBmYjBkMTgxZWVmMzM0YTMwNDliYjVlODRmZGI5YWJmNzY0ZmVmM2U4YnxVU1ItNmIyMDE3YmItYmE5My00OTBhLTk4M2YtNTkwMzU1NjQyODMy/eyJpc19tb2JpbGVfd2VidmlldyI6dHJ1ZX0%3D"
+        showLoader = false
+        showMXConnect = true
+    }
+    
     var body: some View {
         VStack {
             if (showLoader) {
@@ -65,6 +71,14 @@ struct WidgetView: View {
                     Task {
                         showLoader = true
                         await getMasterWidgetUrl()
+                    }
+                }
+                .padding()
+                
+                Button("Click to launch Master Mobile in a webview") {
+                    Task {
+                        showLoader = true
+                        mobileMasterWidgetUrl()
                     }
                 }
                 .padding()
