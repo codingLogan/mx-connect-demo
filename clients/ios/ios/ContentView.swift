@@ -32,6 +32,7 @@ struct ContentView: View {
                 .onOpenURL(perform: { url in
                     print("handling url")
                     print(url)
+                    widgetEvents.events.append(WidgetEvent(name: "app/onOpenURL", data: url.absoluteString))
                 })
             
             WidgetEventsView().tabItem {

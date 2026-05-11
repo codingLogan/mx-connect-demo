@@ -12,6 +12,7 @@ struct WidgetView: View {
     @State var showMXConnect = false
     @State var showLoader = false
     @State var widgetUrl = ""
+    @State var openOauthInWebView = false
     
     func getWidgetUrl() async {
         let url = URL(string: "http://localhost:3000/api/mobile_url")!
@@ -52,12 +53,17 @@ struct WidgetView: View {
             if (showLoader) {
                 ProgressView()
             } else if (showMXConnect && widgetUrl != "") {
+                Toggle("OAuth debug mode (open in WKWebView)", isOn: $openOauthInWebView)
+                    .padding(.horizontal)
                 Button("Close Connect") {
                     showMXConnect = false
                 }
-                WidgetWebView(url:widgetUrl)
+                WidgetWebView(url: widgetUrl, openOauthInWebView: openOauthInWebView)
             } else {
                 Text("Welcome to the MX Connect demo app").padding()
+
+                Toggle("OAuth debug mode (open in WKWebView)", isOn: $openOauthInWebView)
+                    .padding(.horizontal)
                 
                 Button("Click to launch Connect in a webview") {
                     Task {
