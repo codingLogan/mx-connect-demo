@@ -13,13 +13,13 @@ struct WidgetWebView: UIViewControllerRepresentable {
     @EnvironmentObject var widgetEvents: WidgetEvents
     
     var url: String = ""
-    var openOauthInWebView: Bool = false
+    var openOauthInSafariViewController: Bool = false
     
     func makeUIViewController(context: Context) -> WidgetWebViewController {
         let widgetViewController = WidgetWebViewController()
         widgetViewController.widgetUrl = url
         widgetViewController.widgetEvents = widgetEvents
-        widgetViewController.oauthOpenMode = openOauthInWebView ? .inAppWebView : .externalBrowser
+        widgetViewController.oauthOpenMode = openOauthInSafariViewController ? .inAppSafariViewController : .externalBrowser
         
         return widgetViewController
     }

@@ -33,6 +33,7 @@ struct ContentView: View {
                     print("handling url")
                     print(url)
                     widgetEvents.events.append(WidgetEvent(name: "app/onOpenURL", data: url.absoluteString))
+                    NotificationCenter.default.post(name: .mxConnectAppCallbackURLReceived, object: url)
                 })
             
             WidgetEventsView().tabItem {

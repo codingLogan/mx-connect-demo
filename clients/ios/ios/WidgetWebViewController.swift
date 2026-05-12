@@ -6,19 +6,25 @@
 //
 
 import Foundation
+import SafariServices
 import UIKit
 import WebKit
 
-enum OauthOpenMode {
-    case externalBrowser
-    case inAppWebView
+extension Notification.Name {
+    static let mxConnectAppCallbackURLReceived = Notification.Name("mxConnectAppCallbackURLReceived")
 }
 
-class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDelegate {
+enum OauthOpenMode {
+    case externalBrowser
+    case inAppSafariViewController
+}
+
+class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDelegate, SFSafariViewControllerDelegate {
     var widgetWebView: WKWebView!
     var widgetUrl: String = ""
     var widgetEvents: WidgetEvents!
     var oauthOpenMode: OauthOpenMode = .externalBrowser
+    private var oauthSafariController: SFSafariViewController?
 
     private func recordEvent(_ name: String, data: String? = nil) {
         widgetEvents.events.append(WidgetEvent(name: name, data: data ?? ""))
@@ -50,6 +56,17 @@ class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDele
 
         print("Load WKWebView with: \(widgetUrl)")
         widgetWebView.load(URLRequest(url: URL(string:widgetUrl)!))
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(didReceiveOAuthCompleteURL(_:)),
+            name: .mxConnectAppCallbackURLReceived,
+            object: nil
+        )
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self, name: .mxConnectAppCallbackURLReceived, object: nil)
     }
     
     /**
@@ -66,9 +83,9 @@ class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDele
                         return
                     }
 
-                    if oauthOpenMode == .inAppWebView {
-                        recordEvent("oauth/debug/openingInAppWebView", data: oauthURL.absoluteString)
-                        openOauthInDiagnosticWebView(url: oauthURL)
+                    if oauthOpenMode == .inAppSafariViewController {
+                        recordEvent("oauth/debug/openingInAppSafariViewController", data: oauthURL.absoluteString)
+                        openOauthInSafariViewController(url: oauthURL)
                     } else {
                         // Open system browser with the URL from the json payload.
                         recordEvent("oauth/debug/openingExternalBrowser", data: oauthURL.absoluteString)
@@ -82,14 +99,42 @@ class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDele
         }
     }
 
-    private func openOauthInDiagnosticWebView(url: URL) {
-        let oauthController = OAuthDiagnosticWebViewController()
-        oauthController.oauthUrl = url
-        oauthController.widgetEvents = widgetEvents
+    private func openOauthInSafariViewController(url: URL) {
+        let safariController = SFSafariViewController(url: url)
+        safariController.delegate = self
+        safariController.dismissButtonStyle = .close
+        oauthSafariController = safariController
+        present(safariController, animated: true)
+    }
 
-        let navController = UINavigationController(rootViewController: oauthController)
-        navController.modalPresentationStyle = .fullScreen
-        present(navController, animated: true)
+    private func closeOAuthSafariViewIfPresented(reason: String) {
+        guard let safariController = oauthSafariController else {
+            return
+        }
+
+        recordEvent("oauth/debug/closingInAppSafariViewController", data: reason)
+        safariController.dismiss(animated: true)
+        oauthSafariController = nil
+    }
+
+    @objc private func didReceiveOAuthCompleteURL(_ notification: Notification) {
+        guard let url = notification.object as? URL else {
+            return
+        }
+
+        let isOauthComplete = url.scheme == "mxconnectdemo" && url.host == "oauthcomplete"
+        if isOauthComplete {
+            closeOAuthSafariViewIfPresented(reason: url.absoluteString)
+        }
+    }
+
+    func safariViewController(_ controller: SFSafariViewController, didCompleteInitialLoad didLoadSuccessfully: Bool) {
+        recordEvent("oauth/debug/safariDidCompleteInitialLoad", data: String(didLoadSuccessfully))
+    }
+
+    func safariViewControllerDidFinish(_ controller: SFSafariViewController) {
+        recordEvent("oauth/debug/safariDidFinish")
+        oauthSafariController = nil
     }
     
     /**
@@ -110,12 +155,13 @@ class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDele
         
         if (isPostMessageFromMX!) {
             let urlc = URLComponents(string: navigationUrl ?? "")
+            let host = urlc?.host ?? ""
             let path = urlc?.path ?? ""
             // there is only one query param ("metadata") with each navigationUrl, so just grab the first
             let metaDataQueryItem = urlc?.queryItems?.first
 
-            recordEvent((urlc?.host ?? "") + path, data: metaDataQueryItem?.value ?? "")
-            
+            recordEvent(host + path, data: metaDataQueryItem?.value ?? "")
+
             if path == "/oauthRequested" {
                 handleOauthRedirect(payload: metaDataQueryItem)
             }
@@ -176,87 +222,5 @@ class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDele
         SecTrustSetExceptions(serverTrust, exceptions)
         completionHandler(.useCredential, URLCredential(trust: serverTrust))
         print("TODO: fix this WKWebView 'func webView' handler... bad for peformance and it may lead to UI unresponsiveness???")
-    }
-}
-
-class OAuthDiagnosticWebViewController: UIViewController, WKNavigationDelegate {
-    var oauthUrl: URL!
-    var widgetEvents: WidgetEvents!
-
-    private var oauthWebView: WKWebView!
-
-    private func recordEvent(_ name: String, data: String? = nil) {
-        widgetEvents.events.append(WidgetEvent(name: name, data: data ?? ""))
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        title = "OAuth Debug"
-        view.backgroundColor = .systemBackground
-
-        navigationItem.leftBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .close,
-            target: self,
-            action: #selector(closeModal)
-        )
-
-        oauthWebView = WKWebView(frame: .zero)
-        oauthWebView.navigationDelegate = self
-        oauthWebView.translatesAutoresizingMaskIntoConstraints = false
-
-        view.addSubview(oauthWebView)
-        NSLayoutConstraint.activate([
-            oauthWebView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            oauthWebView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            oauthWebView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            oauthWebView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
-
-        recordEvent("oauth/debug/webviewStart", data: oauthUrl.absoluteString)
-        oauthWebView.load(URLRequest(url: oauthUrl))
-    }
-
-    @objc private func closeModal() {
-        dismiss(animated: true)
-    }
-
-    func webView(_ webView: WKWebView,
-                 decidePolicyFor navigationAction: WKNavigationAction,
-                 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-        let urlString = navigationAction.request.url?.absoluteString ?? ""
-        recordEvent("oauth/debug/decidePolicy", data: urlString)
-
-        if let callbackURL = navigationAction.request.url,
-           callbackURL.scheme == "mxconnectdemo" {
-            recordEvent("oauth/debug/callbackDetected", data: callbackURL.absoluteString)
-
-            // Hand off app callback URL so the app's onOpenURL path runs.
-            UIApplication.shared.open(callbackURL)
-            decisionHandler(.cancel)
-            return
-        }
-
-        decisionHandler(.allow)
-    }
-
-    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-        recordEvent("oauth/debug/didStartProvisionalNavigation", data: webView.url?.absoluteString ?? "")
-    }
-
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        recordEvent("oauth/debug/didFinish", data: webView.url?.absoluteString ?? "")
-    }
-
-    func webView(_ webView: WKWebView,
-                 didFail navigation: WKNavigation!,
-                 withError error: Error) {
-        recordEvent("oauth/debug/didFail", data: error.localizedDescription)
-    }
-
-    func webView(_ webView: WKWebView,
-                 didFailProvisionalNavigation navigation: WKNavigation!,
-                 withError error: Error) {
-        recordEvent("oauth/debug/didFailProvisionalNavigation", data: error.localizedDescription)
     }
 }

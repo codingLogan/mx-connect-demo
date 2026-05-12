@@ -6,13 +6,12 @@
 //
 
 import SwiftUI
-import SafariServices
 
 struct WidgetView: View {
     @State var showMXConnect = false
     @State var showLoader = false
     @State var widgetUrl = ""
-    @State var openOauthInWebView = false
+    @State var openOauthInSafariViewController = false
     
     func getWidgetUrl() async {
         let url = URL(string: "http://localhost:3000/api/mobile_url")!
@@ -53,16 +52,16 @@ struct WidgetView: View {
             if (showLoader) {
                 ProgressView()
             } else if (showMXConnect && widgetUrl != "") {
-                Toggle("OAuth debug mode (open in WKWebView)", isOn: $openOauthInWebView)
+                Toggle("OAuth debug mode (open in SFSafariViewController)", isOn: $openOauthInSafariViewController)
                     .padding(.horizontal)
                 Button("Close Connect") {
                     showMXConnect = false
                 }
-                WidgetWebView(url: widgetUrl, openOauthInWebView: openOauthInWebView)
+                WidgetWebView(url: widgetUrl, openOauthInSafariViewController: openOauthInSafariViewController)
             } else {
                 Text("Welcome to the MX Connect demo app").padding()
 
-                Toggle("OAuth debug mode (open in WKWebView)", isOn: $openOauthInWebView)
+                Toggle("OAuth debug mode (open in SFSafariViewController)", isOn: $openOauthInSafariViewController)
                     .padding(.horizontal)
                 
                 Button("Click to launch Connect in a webview") {
