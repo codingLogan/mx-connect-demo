@@ -12,20 +12,30 @@ struct WidgetView: View {
     @State var showLoader = false
     @State var widgetUrl = ""
     @State var openOauthInSafariViewController = false
+
+    @ViewBuilder
+    func widgetLaunchButton(_ title: String, action: @escaping () async -> Void) -> some View {
+        Button(title) {
+            Task {
+                showLoader = true
+                await action()
+            }
+        }
+        .padding()
+    }
     
-    func getWidgetUrl() async {
-        let url = URL(string: "http://localhost:3000/api/mobile_url")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        
+    func getAggregationWidgetUrl() async {
+        let url = URL(string: "http://localhost:3000/api/mobile_aggregation_url")!
+        await makeWidgetUrlRequest(url: url)
+    }
+
+    func getVerificationWidgetUrl() async {
+        let url = URL(string: "http://localhost:3000/api/mobile_verification_url")!
         await makeWidgetUrlRequest(url: url)
     }
 
     func getMasterWidgetUrl() async {
-        let url = URL(string: "http://localhost:3000/api/master_mobile_url")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        
+        let url = URL(string: "http://localhost:3000/api/mobile_master_url")!
         await makeWidgetUrlRequest(url: url)
     }
 
@@ -41,54 +51,28 @@ struct WidgetView: View {
         }
     }
     
-    func mobileMasterWidgetUrl() {
-        widgetUrl = "https://int-widgets.moneydesktop.com/md/mobile_master/NmNhYjAwNjQyNjBlZmQ4YjMxNjRkNTgwMjg3ZWExNzk2OGYwMWYyNzY3YTVjNmVlY2JmMWU3MWRlM2Q0MmJhYzcxMWM5ZjI4NGE3ZmYxOWUwN2VhMjMxMGJjMGZjMzNlOGUxMjZlY2VjYzAyOTgxZmNkM2NmYTBmYjBkMTgxZWVmMzM0YTMwNDliYjVlODRmZGI5YWJmNzY0ZmVmM2U4YnxVU1ItNmIyMDE3YmItYmE5My00OTBhLTk4M2YtNTkwMzU1NjQyODMy/eyJpc19tb2JpbGVfd2VidmlldyI6dHJ1ZX0%3D"
-        showLoader = false
-        showMXConnect = true
-    }
-    
     var body: some View {
         VStack {
+            Toggle("Open OAuth in webview", isOn: $openOauthInSafariViewController)
+                .padding(.horizontal)
+
             if (showLoader) {
                 ProgressView()
             } else if (showMXConnect && widgetUrl != "") {
-                Toggle("OAuth debug mode (open in SFSafariViewController)", isOn: $openOauthInSafariViewController)
-                    .padding(.horizontal)
                 Button("Close Connect") {
                     showMXConnect = false
                 }
                 WidgetWebView(url: widgetUrl, openOauthInSafariViewController: openOauthInSafariViewController)
             } else {
-                Text("Welcome to the MX Connect demo app").padding()
+                Text("Click a link to launch a widget").padding()
+                
+                widgetLaunchButton("Aggregation Connect", action: getAggregationWidgetUrl)
 
-                Toggle("OAuth debug mode (open in SFSafariViewController)", isOn: $openOauthInSafariViewController)
-                    .padding(.horizontal)
+                widgetLaunchButton("Verification Connect", action: getVerificationWidgetUrl)
                 
-                Button("Click to launch Connect in a webview") {
-                    Task {
-                        showLoader = true
-                        await getWidgetUrl()
-                    }
-                }
-                .padding()
-                
-                Button("Click to launch Master in a webview") {
-                    Task {
-                        showLoader = true
-                        await getMasterWidgetUrl()
-                    }
-                }
-                .padding()
-                
-                Button("Click to launch Master Mobile in a webview") {
-                    Task {
-                        showLoader = true
-                        mobileMasterWidgetUrl()
-                    }
-                }
-                .padding()
+                widgetLaunchButton("Master", action: getMasterWidgetUrl)
             }
-        }
+        }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 }
 

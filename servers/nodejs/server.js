@@ -43,7 +43,7 @@ function initializeDemoUser(userHandler, errorMessageHandler) {
             },
             () => {
               errorMessageHandler("Demo user create error");
-            }
+            },
           );
       } else {
         console.log("Using an already-created demo user");
@@ -52,7 +52,7 @@ function initializeDemoUser(userHandler, errorMessageHandler) {
     },
     () => {
       errorMessageHandler("Demo user search error");
-    }
+    },
   );
 }
 
@@ -76,11 +76,11 @@ initializeDemoUser(
   },
   (message) => {
     console.error(
-      "Demo could not get or create the user it needs, server aborting..."
+      "Demo could not get or create the user it needs, server aborting...",
     );
     console.error(message);
     process.exit(1);
-  }
+  },
 );
 
 app.listen(3000);
@@ -98,6 +98,7 @@ app.get("/api/web_url", (req, res) => {
       widget_url: {
         ui_message_version: 4,
         widget_type: "connect_widget",
+        use_cases: ["PFM"],
       },
     })
     .then(
@@ -108,16 +109,17 @@ app.get("/api/web_url", (req, res) => {
         console.error(urlError);
         res.statusCode(500);
         res.json("Something went wrong getting a widget URL");
-      }
+      },
     );
 });
 
-// Endpoint - Returns a basic mx Connect Widget Url.
-app.get("/api/mobile_url", (req, res) => {
+// Endpoint - Returns an aggregation mx Connect Widget Url.
+app.get("/api/mobile_aggregation_url", (req, res) => {
   api
     .post(`/users/${demoUser.guid}/widget_urls`, {
       widget_url: {
         ui_message_version: 4,
+        use_cases: ["PFM"],
         widget_type: "connect_widget",
         is_mobile_webview: true,
         ui_message_webview_url_scheme: "mxconnectdemo",
@@ -132,30 +134,56 @@ app.get("/api/mobile_url", (req, res) => {
         console.error(urlError);
         res.statusCode(500);
         res.json("Something went wrong getting a widget URL");
-      }
+      },
     );
+});
 
-  // Endpoint - Returns a basic mx Master Widget Url.
-  app.get("/api/master_mobile_url", (req, res) => {
-    api
-      .post(`/users/${demoUser.guid}/widget_urls`, {
-        widget_url: {
-          ui_message_version: 4,
-          widget_type: "master_widget",
-          is_mobile_webview: true,
-          ui_message_webview_url_scheme: "mxconnectdemo",
-          client_redirect_url: "mxconnectdemo://oauthcomplete", // Change this value to what your app understands
-        },
-      })
-      .then(
-        (urlResponse) => {
-          res.json(urlResponse);
-        },
-        (urlError) => {
-          console.error(urlError);
-          res.statusCode(500);
-          res.json("Something went wrong getting a widget URL");
-        }
-      );
-  });
+// Endpoint - Returns a verification mx Connect Widget Url.
+app.get("/api/mobile_verification_url", (req, res) => {
+  api
+    .post(`/users/${demoUser.guid}/widget_urls`, {
+      widget_url: {
+        ui_message_version: 4,
+        mode: "verification",
+        use_cases: ["MONEY_MOVEMENT"],
+        widget_type: "connect_widget",
+        is_mobile_webview: true,
+        ui_message_webview_url_scheme: "mxconnectdemo",
+        client_redirect_url: "mxconnectdemo://oauthcomplete", // Change this value to what your app understands
+      },
+    })
+    .then(
+      (urlResponse) => {
+        res.json(urlResponse);
+      },
+      (urlError) => {
+        console.error(urlError);
+        res.statusCode(500);
+        res.json("Something went wrong getting a widget URL");
+      },
+    );
+});
+
+// Endpoint - Returns a basic mx Master Widget Url.
+app.get("/api/mobile_master_url", (req, res) => {
+  api
+    .post(`/users/${demoUser.guid}/widget_urls`, {
+      widget_url: {
+        ui_message_version: 4,
+        widget_type: "master_widget",
+        is_mobile_webview: true,
+        ui_message_webview_url_scheme: "mxconnectdemo",
+        client_redirect_url: "mxconnectdemo://oauthcomplete", // Change this value to what your app understands
+      },
+    })
+    .then(
+      (urlResponse) => {
+        res.json(urlResponse);
+      },
+      (urlError) => {
+        console.error(urlError);
+        res.statusCode(500);
+        res.json("Something went wrong getting a widget URL");
+      },
+    );
 });

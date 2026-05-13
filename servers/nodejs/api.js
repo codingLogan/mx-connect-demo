@@ -2,6 +2,7 @@ import https from "https";
 
 // Keep a reference to the needed MX headers for use in ALL API calls.
 let MX_PLATFORM_API_HEADERS = null;
+const HOSTNAME = "int-api.mx.com";
 
 /**
  * @description Use this function to set up the headers for all future API calls.
@@ -73,7 +74,7 @@ export async function makeRequest(options, data = null) {
 export async function post(endpoint, rawData) {
   const data = JSON.stringify(rawData);
   const allOptions = {
-    hostname: "int-api.mx.com",
+    hostname: HOSTNAME,
     path: endpoint,
     method: "POST",
     headers: {
@@ -94,7 +95,7 @@ export async function post(endpoint, rawData) {
  */
 export async function get(endpoint) {
   const allOptions = {
-    hostname: "int-api.mx.com",
+    hostname: HOSTNAME,
     path: endpoint,
     method: "GET",
     headers: { ...MX_PLATFORM_API_HEADERS },
