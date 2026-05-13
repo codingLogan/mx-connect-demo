@@ -2,7 +2,7 @@ import https from "https";
 
 // Keep a reference to the needed MX headers for use in ALL API calls.
 let MX_PLATFORM_API_HEADERS = null;
-const HOSTNAME = "int-api.mx.com";
+let HOSTNAME = "";
 
 /**
  * @description Use this function to set up the headers for all future API calls.
@@ -10,12 +10,13 @@ const HOSTNAME = "int-api.mx.com";
  * @param {string} clientId this value is given to you from MX when you sign up.
  * @param {string} apiKey this value is given to you from MX when you sign up.
  */
-export function config(clientId, apiKey) {
+export function config(clientId, apiKey, hostname = "int-api.mx.com") {
   MX_PLATFORM_API_HEADERS = {
     "Content-Type": "application/json",
     Accept: "application/vnd.mx.api.v1+json",
     Authorization: `Basic ${getBase64StringOf(`${clientId}:${apiKey}`)}`,
   };
+  HOSTNAME = hostname;
 }
 
 /**

@@ -62,7 +62,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: `${__dirname}/../../.env` });
 
 // Configure the API
-api.config(process.env.CLIENT_ID, process.env.API_KEY);
+api.config(process.env.CLIENT_ID, process.env.API_KEY, process.env.HOSTNAME);
 
 const app = express();
 

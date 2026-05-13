@@ -217,10 +217,19 @@ class WidgetWebViewController : UIViewController, WKNavigationDelegate, WKUIDele
      Don't include this code in your app, this is just to get around ssl issues in development.
      */
     func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        guard let serverTrust = challenge.protectionSpace.serverTrust else { return completionHandler(.useCredential, nil) }
+        let method = challenge.protectionSpace.authenticationMethod
+
+        // Test-app behavior: accept any server-trust challenge instead of restricting by host or certificate chain.
+        guard method == NSURLAuthenticationMethodServerTrust,
+              let serverTrust = challenge.protectionSpace.serverTrust else {
+            completionHandler(.performDefaultHandling, nil)
+            return
+        }
+
+        // These trust exceptions make the webview broadly permissive so internal, self-signed, or otherwise untrusted certs still load.
         let exceptions = SecTrustCopyExceptions(serverTrust)
         SecTrustSetExceptions(serverTrust, exceptions)
         completionHandler(.useCredential, URLCredential(trust: serverTrust))
-        print("TODO: fix this WKWebView 'func webView' handler... bad for peformance and it may lead to UI unresponsiveness???")
+        print("WidgetWebView allowing server trust for host: \(challenge.protectionSpace.host)")
     }
 }

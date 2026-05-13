@@ -59,6 +59,23 @@ struct LocalhostWebView: UIViewRepresentable {
             onNavigationAttempt?(navigationAction)
             decisionHandler(.allow)
         }
+
+        func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+            let method = challenge.protectionSpace.authenticationMethod
+
+            // Test-app behavior: accept any server-trust challenge instead of restricting by host or certificate chain.
+            guard method == NSURLAuthenticationMethodServerTrust,
+                  let serverTrust = challenge.protectionSpace.serverTrust else {
+                completionHandler(.performDefaultHandling, nil)
+                return
+            }
+
+            // These trust exceptions make the localhost webview broadly permissive so internal, self-signed, or otherwise untrusted certs still load.
+            let exceptions = SecTrustCopyExceptions(serverTrust)
+            SecTrustSetExceptions(serverTrust, exceptions)
+            completionHandler(.useCredential, URLCredential(trust: serverTrust))
+            print("LocalhostWebView allowing server trust for host: \(challenge.protectionSpace.host)")
+        }
     }
 
     // SwiftUI asks for a coordinator once and keeps it around as the delegate object.
@@ -74,10 +91,11 @@ extension LocalhostWebView.Coordinator: WKUIDelegate {
         let urlString = navigationAction.request.url?.absoluteString ?? "unknown url"
         print("LocalhostWebView window.open event: \(urlString)")
 
-        if let url = navigationAction.request.url,
-           let presentingViewController = webView.window?.rootViewController {
-            let safariViewController = SFSafariViewController(url: url)
-            presentingViewController.present(safariViewController, animated: true)
+        if let url = navigationAction.request.url {
+            if let presentingViewController = webView.window?.rootViewController {
+                let safariViewController = SFSafariViewController(url: url)
+                presentingViewController.present(safariViewController, animated: true)
+            }
         }
 
         return nil
