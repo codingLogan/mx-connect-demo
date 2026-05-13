@@ -9,9 +9,15 @@ import SwiftUI
 
 struct WidgetView: View {
     @State var showMXConnect = false
+    @State var showLocalhostWebView = false
     @State var showLoader = false
     @State var widgetUrl = ""
     @State var openOauthInSafariViewController = false
+
+    private static let localServerBaseUrl = "http://localhost:3000"
+    private static let mobileAggregationPath = "/api/mobile_aggregation_url"
+    private static let mobileVerificationPath = "/api/mobile_verification_url"
+    private static let mobileMasterPath = "/api/mobile_master_url"
 
     @ViewBuilder
     func widgetLaunchButton(_ title: String, action: @escaping () async -> Void) -> some View {
@@ -25,18 +31,24 @@ struct WidgetView: View {
     }
     
     func getAggregationWidgetUrl() async {
-        let url = URL(string: "http://localhost:3000/api/mobile_aggregation_url")!
+        let url = URL(string: Self.localServerBaseUrl + Self.mobileAggregationPath)!
         await makeWidgetUrlRequest(url: url)
     }
 
     func getVerificationWidgetUrl() async {
-        let url = URL(string: "http://localhost:3000/api/mobile_verification_url")!
+        let url = URL(string: Self.localServerBaseUrl + Self.mobileVerificationPath)!
         await makeWidgetUrlRequest(url: url)
     }
 
     func getMasterWidgetUrl() async {
-        let url = URL(string: "http://localhost:3000/api/mobile_master_url")!
+        let url = URL(string: Self.localServerBaseUrl + Self.mobileMasterPath)!
         await makeWidgetUrlRequest(url: url)
+    }
+
+    func openLocalhostHomePage() async {
+        showLoader = false
+        showMXConnect = false
+        showLocalhostWebView = true
     }
 
     func makeWidgetUrlRequest(url: URL) async {
@@ -45,6 +57,7 @@ struct WidgetView: View {
             let decodedWidgetUrlResponse = try JSONDecoder().decode(WidgetUrlResponse.self, from: data)
             widgetUrl = decodedWidgetUrlResponse.widget_url.url
             showLoader = false
+            showLocalhostWebView = false
             showMXConnect = true
         } catch {
             print("Could not get widget URL: \(error.localizedDescription)")
@@ -58,6 +71,11 @@ struct WidgetView: View {
 
             if (showLoader) {
                 ProgressView()
+            } else if (showLocalhostWebView) {
+                Button("Close Web App") {
+                    showLocalhostWebView = false
+                }
+                LocalhostWebView(urlString: Self.localServerBaseUrl)
             } else if (showMXConnect && widgetUrl != "") {
                 Button("Close Connect") {
                     showMXConnect = false
@@ -71,6 +89,8 @@ struct WidgetView: View {
                 widgetLaunchButton("Verification Connect", action: getVerificationWidgetUrl)
                 
                 widgetLaunchButton("Master", action: getMasterWidgetUrl)
+
+                widgetLaunchButton("Open web app (connect loads in iframe)", action: openLocalhostHomePage)
             }
         }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
