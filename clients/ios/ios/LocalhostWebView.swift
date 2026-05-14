@@ -24,6 +24,7 @@ struct LocalhostWebView: UIViewRepresentable {
         let webView = WKWebView(frame: .zero, configuration: webConfiguration)
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
+        webView.isInspectable = true // Allows Safari Develop menu to inspect this WKWebView at runtime.
 
         if let url = URL(string: urlString) {
             webView.load(URLRequest(url: url))
