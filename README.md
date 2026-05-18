@@ -28,10 +28,13 @@ Set up a Server
 
 ## Open a Client
 
-The web Client is automatically running with the Node Server
+_Start the node server before opening a client, otherwise the client will not be able to load the widget._
 
+The web Client
+
+- This is automatically running with the Node Server
 - Navigate to http://localhost:3000 to open it.
 
 Mobile Client
 
-- ...stay tuned...
+- There is an iOS app in the `./clients/ios` directory. You can open the Xcode project and run it on a simulator or device.
