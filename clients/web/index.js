@@ -1,6 +1,11 @@
 let widget = null;
 const widgetMessagesDisplay = document.querySelector("#connect-messages");
 
+const API_ENDPOINTS = {
+  webConnectUrl: "/api/web_url",
+  webVerificationUrl: "/api/web_verification_url",
+};
+
 /**
  * This is one way to receive Post Messages on your own webpage.
  * The web-widget-sdk has callbacks that can be used instead of
@@ -20,21 +25,25 @@ window.addEventListener("message", (messageEvent) => {
 });
 
 /**
- * On a button click open the Connect Widget using the MX Web Widget SDK.
+ * On a button click open the Connect Widget (aggregation) using the MX Web Widget SDK.
  */
 document
   .querySelector("#connect-widget-button")
   .addEventListener("click", async () => {
-    const response = await getWebConnectUrl();
+    const response = await getWebConnectUrl(API_ENDPOINTS.webConnectUrl);
     console.log("MX Connect url response", response);
+    renderWidgetWithUrl(response?.widget_url?.url);
+  });
 
-    // `widgetSdk` is currently imported directly in the html page.
-    // It could also be imported using ESModules if a bundler like rollup
-    // is used to package your frontend app together.
-    widget = new widgetSdk.ConnectWidget({
-      container: "#connect-widget",
-      url: response?.widget_url?.url,
-    });
+/**
+ * On a button click open the Connect Widget (verification) using the MX Web Widget SDK.
+ */
+document
+  .querySelector("#connect-widget-verification-button")
+  .addEventListener("click", async () => {
+    const response = await getWebConnectUrl(API_ENDPOINTS.webVerificationUrl);
+    console.log("MX Connect url response", response);
+    renderWidgetWithUrl(response?.widget_url?.url);
   });
 
 // Close the widget with the SDK's unmount() function on a button click.
@@ -46,15 +55,23 @@ document
     }
   });
 
+// `widgetSdk` is currently imported directly in the html page.
+// It could also be imported using ESModules if a bundler like rollup
+// is used to package your frontend app together.
+async function renderWidgetWithUrl(url) {
+  widget = new widgetSdk.ConnectWidget({
+    container: "#connect-widget",
+    url,
+  });
+}
+
 /**
  * @description This function relies on the backend server's interaction
  * with the MX Platform API to get the widget URL.
  *
  * @returns a JSON response containing the url to the Connect widget
  */
-async function getWebConnectUrl() {
-  const url = "/api/web_url";
-
+async function getWebConnectUrl(url) {
   try {
     const response = await fetch(url);
     if (!response.ok) {

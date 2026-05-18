@@ -113,6 +113,29 @@ app.get("/api/web_url", (req, res) => {
     );
 });
 
+// Endpoint - Returns a basic mx Connect Widget Url.
+app.get("/api/web_verification_url", (req, res) => {
+  api
+    .post(`/users/${demoUser.guid}/widget_urls`, {
+      widget_url: {
+        ui_message_version: 4,
+        widget_type: "connect_widget",
+        use_cases: ["MONEY_MOVEMENT"],
+        mode: "verification",
+      },
+    })
+    .then(
+      (urlResponse) => {
+        res.json(urlResponse);
+      },
+      (urlError) => {
+        console.error(urlError);
+        res.statusCode(500);
+        res.json("Something went wrong getting a widget URL");
+      },
+    );
+});
+
 // Endpoint - Returns an aggregation mx Connect Widget Url.
 app.get("/api/mobile_aggregation_url", (req, res) => {
   api
