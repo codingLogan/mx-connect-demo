@@ -45,10 +45,51 @@ struct LocalhostWebView: UIViewRepresentable {
 
     // WKNavigationDelegate handles normal navigation requests, including main-frame and iframe/subframe attempts.
     final class Coordinator: NSObject, WKNavigationDelegate {
+        private weak var presentedSafariViewController: SFSafariViewController?
+        private var oauthCallbackObserver: NSObjectProtocol?
         var onNavigationAttempt: ((WKNavigationAction) -> Void)?
 
         init(onNavigationAttempt: ((WKNavigationAction) -> Void)? = nil) {
             self.onNavigationAttempt = onNavigationAttempt
+            super.init()
+
+            oauthCallbackObserver = NotificationCenter.default.addObserver(
+                forName: .mxConnectAppCallbackURLReceived,
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
+                guard let self,
+                      let callbackUrl = notification.object as? URL,
+                      self.isMXConnectOAuthCompleteCallback(callbackUrl) else {
+                    return
+                }
+
+                print("LocalhostWebView received OAuth callback from app: \(callbackUrl.absoluteString)")
+                self.closePresentedSafariViewControllerIfNeeded()
+            }
+        }
+
+        deinit {
+            if let oauthCallbackObserver {
+                NotificationCenter.default.removeObserver(oauthCallbackObserver)
+            }
+        }
+
+        private func isMXConnectOAuthCompleteCallback(_ url: URL?) -> Bool {
+            guard let url,
+                  let scheme = url.scheme else {
+                return false
+            }
+
+            return scheme.caseInsensitiveCompare("mxconnectdemo") == .orderedSame
+                && url.host?.caseInsensitiveCompare("oauthcomplete") == .orderedSame
+        }
+
+        private func closePresentedSafariViewControllerIfNeeded() {
+            if let safariViewController = presentedSafariViewController {
+                safariViewController.dismiss(animated: true)
+                presentedSafariViewController = nil
+            }
         }
 
         // This is the hook for actual navigation requests made by the web content.
@@ -57,6 +98,14 @@ struct LocalhostWebView: UIViewRepresentable {
             let urlString = navigationAction.request.url?.absoluteString ?? "unknown url"
             let frameType = navigationAction.targetFrame?.isMainFrame == true ? "main frame" : "subframe"
             print("LocalhostWebView navigation event [\(frameType)]: \(urlString)")
+
+            if isMXConnectOAuthCompleteCallback(navigationAction.request.url) {
+                print("LocalhostWebView detected mxconnectdemo://oauthcomplete callback. Closing OAuth Safari if presented.")
+                closePresentedSafariViewControllerIfNeeded()
+                decisionHandler(.cancel)
+                return
+            }
+
             onNavigationAttempt?(navigationAction)
             decisionHandler(.allow)
         }
@@ -92,9 +141,16 @@ extension LocalhostWebView.Coordinator: WKUIDelegate {
         let urlString = navigationAction.request.url?.absoluteString ?? "unknown url"
         print("LocalhostWebView window.open event: \(urlString)")
 
+        if isMXConnectOAuthCompleteCallback(navigationAction.request.url) {
+            print("LocalhostWebView detected mxconnectdemo://oauthcomplete from window.open. Closing OAuth Safari if presented.")
+            closePresentedSafariViewControllerIfNeeded()
+            return nil
+        }
+
         if let url = navigationAction.request.url {
             if let presentingViewController = webView.window?.rootViewController {
                 let safariViewController = SFSafariViewController(url: url)
+                presentedSafariViewController = safariViewController
                 presentingViewController.present(safariViewController, animated: true)
             }
         }

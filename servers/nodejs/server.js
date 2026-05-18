@@ -136,6 +136,32 @@ app.get("/api/web_verification_url", (req, res) => {
     );
 });
 
+// Endpoint - Hybrid mobile Oauth referral of "app"
+app.get("/api/hybrid_mobile_verification_url", (req, res) => {
+  api
+    .post(`/users/${demoUser.guid}/widget_urls`, {
+      widget_url: {
+        ui_message_version: 4,
+        widget_type: "connect_widget",
+        use_cases: ["MONEY_MOVEMENT"],
+        mode: "verification",
+        oauth_referral_source: "APP",
+        // ui_message_webview_url_scheme: "mxconnectdemo",
+        client_redirect_url: "mxconnectdemo://oauthcomplete", // Change this value to what your app understands
+      },
+    })
+    .then(
+      (urlResponse) => {
+        res.json(urlResponse);
+      },
+      (urlError) => {
+        console.error(urlError);
+        res.statusCode(500);
+        res.json("Something went wrong getting a widget URL");
+      },
+    );
+});
+
 // Endpoint - Returns an aggregation mx Connect Widget Url.
 app.get("/api/mobile_aggregation_url", (req, res) => {
   api

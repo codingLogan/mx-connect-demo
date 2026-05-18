@@ -4,7 +4,10 @@ const widgetMessagesDisplay = document.querySelector("#connect-messages");
 const API_ENDPOINTS = {
   webConnectUrl: "/api/web_url",
   webVerificationUrl: "/api/web_verification_url",
+  hybridMobileVerificationUrl: "/api/hybrid_mobile_verification_url",
 };
+
+let isInMobileContext = false;
 
 /**
  * This is one way to receive Post Messages on your own webpage.
@@ -21,6 +24,12 @@ window.addEventListener("message", (messageEvent) => {
     codePreElement.appendChild(messageElement);
     widgetMessagesDisplay.appendChild(codePreElement);
     widgetMessagesDisplay.scrollTop = widgetMessagesDisplay.scrollHeight;
+
+    if (messageEvent.data?.type == "mx/connect/oauthRequested") {
+      if (isInMobileContext) {
+        window.open(messageEvent.data.metadata.url);
+      }
+    }
   }
 });
 
@@ -32,6 +41,7 @@ document
   .addEventListener("click", async () => {
     const response = await getWebConnectUrl(API_ENDPOINTS.webConnectUrl);
     console.log("MX Connect url response", response);
+    isInMobileContext = false;
     renderWidgetWithUrl(response?.widget_url?.url);
   });
 
@@ -43,6 +53,21 @@ document
   .addEventListener("click", async () => {
     const response = await getWebConnectUrl(API_ENDPOINTS.webVerificationUrl);
     console.log("MX Connect url response", response);
+    isInMobileContext = false;
+    renderWidgetWithUrl(response?.widget_url?.url);
+  });
+
+/**
+ * On a button click open the Connect Widget (hybrid mobile verification) using the MX Web Widget SDK.
+ */
+document
+  .querySelector("#connect-widget-hybrid-mobile-verification-button")
+  .addEventListener("click", async () => {
+    const response = await getWebConnectUrl(
+      API_ENDPOINTS.hybridMobileVerificationUrl,
+    );
+    console.log("MX Connect url response", response);
+    isInMobileContext = true;
     renderWidgetWithUrl(response?.widget_url?.url);
   });
 
